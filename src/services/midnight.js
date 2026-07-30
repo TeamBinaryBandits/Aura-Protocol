@@ -35,12 +35,6 @@ export const NETWORKS = {
 
 const wait = (milliseconds) => new Promise((resolve) => setTimeout(resolve, milliseconds));
 
-function shortRandomHex(bytes = 16) {
-  const values = new Uint8Array(bytes);
-  crypto.getRandomValues(values);
-  return Array.from(values, (value) => value.toString(16).padStart(2, '0')).join('');
-}
-
 function readFirstValue(source, keys) {
   for (const key of keys) {
     const value = source?.[key];
@@ -53,15 +47,24 @@ function readFirstValue(source, keys) {
  * 1AM injects asynchronously. The connector shape is intentionally isolated
  * here so an SDK binding can replace it without changing UI components.
  */
-function getInjected1AM() {
+export function getInjected1AM() {
   if (typeof window === 'undefined') return null;
   const midnight = window.midnight;
-  if (!midnight) return null;
-
-  return midnight['1am'] || midnight.mn1am || (typeof midnight.enable === 'function' ? midnight : null);
+  const candidates = [
+    midnight?.['1am'],
+    midnight?.['1AM'],
+    midnight?.mn1am,
+    midnight?.wallets?.['1am'],
+    midnight?.wallets?.['1AM'],
+    window['1am'],
+    midnight,
+  ];
+  return candidates.find((candidate) => (
+    candidate && (typeof candidate.enable === 'function' || typeof candidate.connect === 'function')
+  )) || null;
 }
 
-async function waitFor1AM(timeoutMs = 4000) {
+async function waitFor1AM(timeoutMs = 10000) {
   const startedAt = Date.now();
   let connector = getInjected1AM();
 
@@ -84,6 +87,31 @@ export async function reserveContractAddress(network) {
   }
 
   return payload;
+}
+
+async function createDemoActivityReference(network, action) {
+  const response = await fetch('/api/activity-reference', {
+    method: 'POST',
+    headers: { Accept: 'application/json', 'Content-Type': 'application/json' },
+    body: JSON.stringify({ network, action }),
+  });
+  const payload = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(payload.error || 'The activity service could not record this demo.');
+  return payload;
+}
+
+async function connectProvider(connector) {
+  const connection = typeof connector.enable === 'function'
+    ? await connector.enable()
+    : await connector.connect();
+  const api = connection || connector;
+  const state = typeof api?.state === 'function'
+    ? await api.state()
+    : (typeof api?.getState === 'function' ? await api.getState() : {});
+  const configuration = typeof api?.getConfiguration === 'function'
+    ? await api.getConfiguration()
+    : (typeof api?.configuration === 'function' ? await api.configuration() : {});
+  return { api, state: state || {}, configuration: configuration || {} };
 }
 
 class MidnightService {
@@ -139,28 +167,24 @@ class MidnightService {
   async connectWallet() {
     try {
       const connector = await waitFor1AM();
-      if (connector) {
-        const api = await connector.enable();
-        const state = typeof api?.state === 'function' ? await api.state() : {};
-        const configuration = typeof api?.getConfiguration === 'function' ? await api.getConfiguration() : {};
+      if (!connector) throw new Error('1AM was not detected after 10 seconds. Install and unlock 1AM, then refresh this page and try again.');
 
-        this.walletApi = api;
-        this.walletAddress = readFirstValue(state, ['address', 'unshieldedAddress', 'walletAddress'])
-          || readFirstValue(configuration, ['address', 'unshieldedAddress']);
-        this.dustBalance = Number(readFirstValue(state, ['dust', 'dustBalance', 'tDUST'])) || null;
-        this.nightBalance = Number(readFirstValue(state, ['night', 'tNIGHT', 'nightBalance'])) || null;
-        this.walletType = '1am';
-        this.isConnected = true;
-      } else if (DEMO_MODE) {
-        this.walletApi = null;
-        this.walletAddress = `demo_${shortRandomHex(10)}`;
-        this.dustBalance = 250;
-        this.nightBalance = 0;
-        this.walletType = 'demo';
-        this.isConnected = true;
-      } else {
-        throw new Error('1AM was not detected. Install or unlock the extension, then try again.');
+      const { api, state, configuration } = await connectProvider(connector);
+      const reportedNetwork = readFirstValue(state, ['network', 'networkId', 'chainId'])
+        || readFirstValue(configuration, ['network', 'networkId', 'chainId']);
+      if (reportedNetwork && !String(reportedNetwork).toLowerCase().includes(this.currentNetwork.id)
+        && String(reportedNetwork) !== String(this.currentNetwork.networkId)) {
+        throw new Error(`1AM is connected to ${reportedNetwork}. Switch it to Midnight ${this.currentNetwork.name.replace('Midnight ', '')} and try again.`);
       }
+
+      this.walletApi = api;
+      this.walletAddress = readFirstValue(state, ['address', 'unshieldedAddress', 'walletAddress', 'accountAddress'])
+        || readFirstValue(configuration, ['address', 'unshieldedAddress', 'walletAddress', 'accountAddress'])
+        || '1AM connected (account not exposed by connector)';
+      this.dustBalance = Number(readFirstValue(state, ['dust', 'dustBalance', 'tDUST'])) || null;
+      this.nightBalance = Number(readFirstValue(state, ['night', 'tNIGHT', 'nightBalance'])) || null;
+      this.walletType = '1am';
+      this.isConnected = true;
 
       this.notify();
       return { success: true, address: this.walletAddress, walletType: this.walletType };
@@ -168,6 +192,18 @@ class MidnightService {
       this.disconnectWallet();
       return { success: false, error: error.message || 'Unable to connect 1AM Wallet.' };
     }
+  }
+
+  connectDemoWallet() {
+    if (!DEMO_MODE) return { success: false, error: 'Local demo mode is disabled.' };
+    this.walletApi = null;
+    this.walletAddress = 'Local demo wallet';
+    this.dustBalance = 250;
+    this.nightBalance = 0;
+    this.walletType = 'demo';
+    this.isConnected = true;
+    this.notify();
+    return { success: true, address: this.walletAddress, walletType: this.walletType };
   }
 
   disconnectWallet() {
@@ -206,15 +242,15 @@ class MidnightService {
     await wait(450);
     onProofProgress?.({ step: 'BROADCAST', progress: 100, text: 'Recorded in local demo activity.' });
 
-    const contractAddress = publicInputs?.contractAddress;
-    if (!contractAddress) throw new Error('A server-issued contract reservation is required.');
+    const deploymentReference = publicInputs?.deploymentReference;
+    if (!deploymentReference) throw new Error('A server-issued deployment reservation is required.');
+    const activity = await createDemoActivityReference(this.currentNetwork.id, circuitName);
 
     const transaction = {
-      id: `demo-${Date.now()}`,
+      id: activity.activityReference,
       type: circuitName === 'initialize_survey' ? 'CONTRACT_RESERVATION' : 'DEMO_VOTE',
-      contractAddress,
-      txHash: `demo_tx_${shortRandomHex(20)}`,
-      nullifier: `demo_nullifier_${shortRandomHex(16)}`,
+      deploymentReference,
+      activityReference: activity.activityReference,
       network: this.currentNetwork.id,
       title: publicInputs?.title || 'AURA demo interaction',
       timestamp: new Date().toLocaleString(),

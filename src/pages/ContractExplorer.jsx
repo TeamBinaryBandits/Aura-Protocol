@@ -71,7 +71,7 @@ export default function ContractExplorer() {
         <div className="p-10 rounded-3xl border border-dashed border-slate-300 bg-white/60 text-center">
           <Globe className="w-7 h-7 mx-auto text-slate-400" />
           <h2 className="mt-3 font-bold text-slate-800">No reservation yet</h2>
-          <p className="mt-1 text-xs text-slate-600">Reserve an address here or begin a survey deployment. The browser never fabricates contract identifiers.</p>
+          <p className="mt-1 text-xs text-slate-600">Reserve a deployment reference here or begin a survey deployment. The browser never fabricates contract identifiers.</p>
         </div>
       ) : (
         <div className="space-y-4">
@@ -91,13 +91,13 @@ export default function ContractExplorer() {
               <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-3 text-xs font-mono">
                 <div className="p-3 rounded-2xl bg-slate-50 border border-slate-200">
                   <div className="flex items-center justify-between gap-2 text-slate-500">
-                    Server-issued reservation
-                    <button type="button" onClick={() => copy(reservation.contractAddress, reservation.reservationId)} className="inline-flex items-center gap-1 text-slate-600 hover:text-emerald-800">
+                    Server-issued deployment reference
+                    <button type="button" onClick={() => copy(reservation.deploymentReference, reservation.reservationId)} className="inline-flex items-center gap-1 text-slate-600 hover:text-emerald-800">
                       {copiedId === reservation.reservationId ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
                       Copy
                     </button>
                   </div>
-                  <p className="mt-2 break-all font-semibold text-slate-900">{reservation.contractAddress}</p>
+                  <p className="mt-2 break-all font-semibold text-slate-900">{reservation.deploymentReference}</p>
                 </div>
                 <div className="p-3 rounded-2xl bg-slate-50 border border-slate-200">
                   <p className="text-slate-500">Reservation ID</p>

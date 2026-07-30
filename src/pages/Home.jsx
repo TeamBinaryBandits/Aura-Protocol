@@ -272,9 +272,9 @@ export default function Home() {
                 <div className="p-2 rounded-xl bg-slate-50 border border-emerald-200/60 text-[11px] font-mono text-slate-700 flex items-center justify-between">
                   <span>Contract / sample ID:</span>
                   <div className="flex items-center gap-1 text-sky-800 font-bold">
-                    <span>{truncate(survey.contractAddress)}</span>
+                    <span>{truncate(survey.contractAddress || survey.deploymentReference || 'Awaiting deployment')}</span>
                     <button
-                      onClick={() => handleCopy(survey.contractAddress, survey.id)}
+                      onClick={() => handleCopy(survey.contractAddress || survey.deploymentReference || 'Awaiting deployment', survey.id)}
                       className="text-slate-500 hover:text-emerald-700"
                     >
                       {copiedAddressId === survey.id ? <Check className="w-3 h-3 text-emerald-600" /> : <Copy className="w-3 h-3" />}

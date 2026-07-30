@@ -19,7 +19,7 @@ export default function CastVote() {
   const navigate = useNavigate();
 
   const survey = INITIAL_SURVEYS.find(s => s.id === id) || INITIAL_SURVEYS[0];
-  const contractAddress = survey.contractAddress || 'unassigned_contract';
+  const deploymentReference = survey.deploymentReference || survey.contractAddress || 'unassigned_contract';
 
   const [selectedOption, setSelectedOption] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -45,7 +45,7 @@ export default function CastVote() {
 
       const result = await midnightService.submitZKTransaction(
         'cast_anonymous_vote',
-        { pollId: survey.id, title: survey.title, contractAddress },
+        { pollId: survey.id, title: survey.title, deploymentReference },
         {
           selected_option: selectedOption
         },
@@ -95,11 +95,11 @@ export default function CastVote() {
         </p>
 
         <div className="p-3 rounded-2xl bg-slate-50 border border-slate-200 font-mono text-xs text-slate-600 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
-          <span>Target Contract Address:</span>
+          <span>Deployment target:</span>
           <div className="flex items-center gap-2 text-sky-800 font-bold break-all">
-            <span>{contractAddress}</span>
+            <span>{deploymentReference}</span>
             <button
-              onClick={() => handleCopy(contractAddress, 'ca')}
+              onClick={() => handleCopy(deploymentReference, 'ca')}
               className="text-slate-500 hover:text-emerald-700"
             >
               {copiedKey === 'ca' ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
@@ -202,9 +202,9 @@ export default function CastVote() {
             
             <div className="space-y-1">
               <div className="flex items-center justify-between text-slate-500 text-[11px]">
-                <span>Target contract / reservation:</span>
+                <span>Deployment reference:</span>
                 <button
-                  onClick={() => handleCopy(txResult.contractAddress, 'ca')}
+                  onClick={() => handleCopy(txResult.deploymentReference, 'ca')}
                   className="text-slate-500 hover:text-emerald-700 flex items-center gap-1"
                 >
                   {copiedKey === 'ca' ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
@@ -212,7 +212,7 @@ export default function CastVote() {
                 </button>
               </div>
               <div className="text-sky-800 font-bold text-sm break-all">
-                {txResult.contractAddress}
+                {txResult.deploymentReference}
               </div>
             </div>
 
@@ -220,7 +220,7 @@ export default function CastVote() {
               <div className="flex items-center justify-between text-slate-500 text-[11px]">
                 <span>Demo activity ID:</span>
                 <button
-                  onClick={() => handleCopy(txResult.txHash, 'tx')}
+                  onClick={() => handleCopy(txResult.activityReference, 'tx')}
                   className="text-slate-500 hover:text-emerald-700 flex items-center gap-1"
                 >
                   {copiedKey === 'tx' ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
@@ -228,23 +228,7 @@ export default function CastVote() {
                 </button>
               </div>
               <div className="text-emerald-800 font-bold text-sm break-all">
-                {txResult.txHash}
-              </div>
-            </div>
-
-            <div className="space-y-1 pt-2 border-t border-slate-200">
-              <div className="flex items-center justify-between text-slate-500 text-[11px]">
-                <span>Demo nullifier marker:</span>
-                <button
-                  onClick={() => handleCopy(txResult.nullifierHash, 'nul')}
-                  className="text-slate-500 hover:text-emerald-700 flex items-center gap-1"
-                >
-                  {copiedKey === 'nul' ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
-                  <span>Copy</span>
-                </button>
-              </div>
-              <div className="text-slate-900 font-bold text-sm break-all">
-                {txResult.nullifierHash}
+                {txResult.activityReference}
               </div>
             </div>
 

@@ -14,7 +14,9 @@ describe('browser deployment surface', () => {
     assert.match(html, /<html lang="en"/);
     assert.match(app, /<main[^>]*>/);
     assert.match(service, /\/api\/contract-address/);
+    assert.match(service, /\/api\/activity-reference/);
     assert.doesNotMatch(service, /generateMidnightContractAddress/);
+    assert.doesNotMatch(service, /demo_tx_/);
     assert.match(settings, /Open Preview tNIGHT faucet/);
   });
 });

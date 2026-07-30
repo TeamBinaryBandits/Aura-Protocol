@@ -13,9 +13,9 @@ describe('server-issued contract reservations', () => {
     const first = createContractReservation('preview');
     const second = createContractReservation('preview');
 
-    assert.match(first.contractAddress, /^mn_contract_preview_[a-f0-9]{48}$/);
+    assert.match(first.deploymentReference, /^aura_deploy_preview_[a-f0-9]{24}$/);
     assert.match(first.reservationId, /^aura_[a-f0-9]{24}$/);
     assert.equal(first.status, 'RESERVED');
-    assert.notEqual(first.contractAddress, second.contractAddress);
+    assert.notEqual(first.deploymentReference, second.deploymentReference);
   });
 });

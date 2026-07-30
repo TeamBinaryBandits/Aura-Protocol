@@ -19,11 +19,10 @@ export function createContractReservation(network) {
     throw new Error('Unsupported Midnight network.');
   }
 
-  const entropy = randomBytes(24).toString('hex');
   const reservationId = randomBytes(12).toString('hex');
 
   return {
-    contractAddress: `mn_contract_${normalizedNetwork}_${entropy}`,
+    deploymentReference: `aura_deploy_${normalizedNetwork}_${reservationId}`,
     reservationId: `aura_${reservationId}`,
     network: normalizedNetwork,
     status: 'RESERVED',

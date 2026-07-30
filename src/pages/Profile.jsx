@@ -89,8 +89,8 @@ export default function Profile() {
                   <span className="text-slate-500">{transaction.timestamp} · {transaction.status}</span>
                 </div>
                 <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-2 font-mono text-[11px]">
-                  <p className="p-2.5 rounded-xl bg-white border border-slate-200 break-all text-slate-700"><span className="block mb-1 text-slate-500">Reservation / target</span>{transaction.contractAddress}</p>
-                  <p className="p-2.5 rounded-xl bg-white border border-slate-200 break-all text-slate-700"><span className="block mb-1 text-slate-500">Activity ID</span>{transaction.txHash}</p>
+                  <p className="p-2.5 rounded-xl bg-white border border-slate-200 break-all text-slate-700"><span className="block mb-1 text-slate-500">Deployment reference</span>{transaction.deploymentReference}</p>
+                  <p className="p-2.5 rounded-xl bg-white border border-slate-200 break-all text-slate-700"><span className="block mb-1 text-slate-500">Activity reference</span>{transaction.activityReference}</p>
                 </div>
               </article>
             ))}

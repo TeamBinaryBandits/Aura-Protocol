@@ -7,7 +7,7 @@ AURA is a React/Vite interface for exploring private survey flows on Midnight Pr
 - `contracts/anonymous_survey.compact` is included in this repository and is the source of truth for the survey circuit.
 - `managed/anonymous_survey/index.ts` is a deterministic local test adapter. It is not a substitute for generated Compact bindings or a deployed contract.
 - 1AM is detected from its injected connector and is never replaced by a fabricated production wallet account.
-- Contract identifiers come from the server-side `/api/contract-address` endpoint. They are **15-minute reservations**, not live on-chain contract addresses. A canonical address must come back from a wallet-authorized Midnight deployment.
+- Deployment references come from the server-side `/api/contract-address` endpoint. They are **15-minute reservations**, not live on-chain contract addresses. A canonical address and transaction hash must come back from a wallet-authorized Midnight deployment; neither is fabricated by AURA.
 - Local Vite development enables a clearly labelled demo path by default. Vercel production keeps it off unless `VITE_AURA_DEMO_MODE=true` is configured deliberately.
 
 ## Contract evidence
@@ -58,6 +58,6 @@ VITE_MIDNIGHT_DUST_BUFFER=30
 
 ## Vercel
 
-`vercel.json` builds the Vite app and preserves client-side routes. The `api/contract-address.js` Vercel Function uses Node’s CSPRNG to create non-cacheable contract reservations; no wallet key or secret is accepted by that endpoint.
+`vercel.json` builds the Vite app and preserves client-side routes. The `api/contract-address.js` and `api/activity-reference.js` Vercel Functions use Node’s CSPRNG for non-cacheable server-side references; no wallet key or secret is accepted by either endpoint. A server-generated reference is never presented as a Midnight address or transaction hash.
 
 Before enabling live transactions in Vercel, compile the Compact source with the version of the Midnight toolchain you deploy against, add the generated client binding, and route the wallet-approved deployment result back to AURA. Never promote a reservation or demo transaction as an on-chain confirmation.

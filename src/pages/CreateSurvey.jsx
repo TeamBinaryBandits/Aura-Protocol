@@ -84,7 +84,9 @@ export default function CreateSurvey() {
     try {
       midnightService.setNetwork(targetNetwork);
       const reservation = await reserveContractAddress(targetNetwork);
-      const connection = await midnightService.connectWallet();
+      const connection = midnightService.isConnected
+        ? { success: true }
+        : await midnightService.connectWallet();
       if (!connection.success) throw new Error(connection.error);
       
       const result = await midnightService.submitZKTransaction(
@@ -93,7 +95,7 @@ export default function CreateSurvey() {
           title,
           targetNetwork,
           threshold,
-          contractAddress: reservation.contractAddress,
+          deploymentReference: reservation.deploymentReference,
           reservationId: reservation.reservationId,
           addressStatus: reservation.status,
         },
@@ -106,8 +108,8 @@ export default function CreateSurvey() {
         title,
         description: description || 'No detailed description provided.',
         network: targetNetwork,
-        contractAddress: reservation.contractAddress,
-        deploymentTxHash: result.txHash,
+        deploymentReference: reservation.deploymentReference,
+        deploymentActivityReference: result.activityReference,
         creator: midnightService.walletAddress || '0xmn_creator',
         threshold: parseInt(threshold),
         totalVotes: 0,
@@ -119,8 +121,8 @@ export default function CreateSurvey() {
       INITIAL_SURVEYS.unshift(newSurvey);
 
       setDeployResult({
-        contractAddress: reservation.contractAddress,
-        txHash: result.txHash,
+        deploymentReference: reservation.deploymentReference,
+        activityReference: result.activityReference,
         network: targetNetwork
       });
 
@@ -386,33 +388,33 @@ export default function CreateSurvey() {
             
             <div className="space-y-1">
               <div className="flex items-center justify-between text-slate-500 text-[11px]">
-                <span>Midnight Contract Address:</span>
+                <span>Server deployment reference:</span>
                 <button
-                  onClick={() => handleCopy(deployResult.contractAddress, 'ca')}
+                  onClick={() => handleCopy(deployResult.deploymentReference, 'deployment')}
                   className="text-slate-500 hover:text-emerald-700 flex items-center gap-1"
                 >
-                  {copiedKey === 'ca' ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
+                  {copiedKey === 'deployment' ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
                   <span>Copy</span>
                 </button>
               </div>
               <div className="text-sky-800 font-bold text-sm break-all">
-                {deployResult.contractAddress}
+                {deployResult.deploymentReference}
               </div>
             </div>
 
             <div className="space-y-1 pt-2 border-t border-slate-200">
               <div className="flex items-center justify-between text-slate-500 text-[11px]">
-                <span>Deployment Tx Hash:</span>
+                <span>Server demo activity reference:</span>
                 <button
-                  onClick={() => handleCopy(deployResult.txHash, 'tx')}
+                  onClick={() => handleCopy(deployResult.activityReference, 'activity')}
                   className="text-slate-500 hover:text-emerald-700 flex items-center gap-1"
                 >
-                  {copiedKey === 'tx' ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
+                  {copiedKey === 'activity' ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
                   <span>Copy</span>
                 </button>
               </div>
               <div className="text-emerald-800 font-bold text-sm break-all">
-                {deployResult.txHash}
+                {deployResult.activityReference}
               </div>
             </div>
 

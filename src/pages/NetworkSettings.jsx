@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { AlertCircle, CheckCircle2, ExternalLink, Gauge, Globe, ShieldCheck, Wallet } from 'lucide-react';
 import {
   ESTIMATED_TRANSACTION_DUST,
+  DEMO_MODE,
   MIN_DUST_BUFFER,
   midnightService,
   NETWORKS,
@@ -30,6 +31,12 @@ export default function NetworkSettings() {
     const result = await midnightService.connectWallet();
     if (!result.success) setConnectionError(result.error);
     setIsConnecting(false);
+  };
+
+  const connectDemo = () => {
+    setConnectionError(null);
+    const result = midnightService.connectDemoWallet();
+    if (!result.success) setConnectionError(result.error);
   };
 
   const formatBalance = (value, token) => (typeof value === 'number' ? `${value} ${token}` : 'Reported by wallet after connection');
@@ -172,6 +179,11 @@ export default function NetworkSettings() {
             <a href={ONE_AM_INSTALL_URL} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-semibold">
               Install 1AM <ExternalLink className="w-3.5 h-3.5" />
             </a>
+            {DEMO_MODE && (
+              <button type="button" onClick={connectDemo} className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border border-amber-300 bg-amber-50 hover:bg-amber-100 text-amber-900 text-xs font-semibold">
+                Use local demo
+              </button>
+            )}
           </div>
         )}
       </section>
