@@ -129,7 +129,6 @@ export default function CreateSurvey() {
       setIsDeploying(false);
 
     } catch (err) {
-      console.error(err);
       setDeployError(err.message || 'Unable to start deployment.');
       setIsDeploying(false);
     }

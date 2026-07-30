@@ -100,18 +100,40 @@ async function createDemoActivityReference(network, action) {
   return payload;
 }
 
-async function connectProvider(connector) {
-  const connection = typeof connector.enable === 'function'
-    ? await connector.enable()
-    : await connector.connect();
+async function connectProvider(connector, networkId) {
+  // DApp Connector v4 injects InitialAPI at window.midnight.<walletId> and
+  // requires connect(networkId). Retain enable() only for older 1AM builds.
+  const connection = typeof connector.connect === 'function'
+    ? await connector.connect(networkId)
+    : await connector.enable();
   const api = connection || connector;
+  await api?.hintUsage?.([
+    'getConnectionStatus',
+    'getConfiguration',
+    'getUnshieldedAddress',
+    'getDustBalance',
+    'balanceUnsealedTransaction',
+    'submitTransaction',
+  ]);
   const state = typeof api?.state === 'function'
     ? await api.state()
     : (typeof api?.getState === 'function' ? await api.getState() : {});
   const configuration = typeof api?.getConfiguration === 'function'
     ? await api.getConfiguration()
     : (typeof api?.configuration === 'function' ? await api.configuration() : {});
-  return { api, state: state || {}, configuration: configuration || {} };
+  const [connectionStatus, unshieldedAddress, dust] = await Promise.all([
+    typeof api?.getConnectionStatus === 'function' ? api.getConnectionStatus() : null,
+    typeof api?.getUnshieldedAddress === 'function' ? api.getUnshieldedAddress() : null,
+    typeof api?.getDustBalance === 'function' ? api.getDustBalance() : null,
+  ]);
+  return {
+    api,
+    state: state || {},
+    configuration: configuration || {},
+    connectionStatus: connectionStatus || {},
+    unshieldedAddress: unshieldedAddress || {},
+    dust: dust || {},
+  };
 }
 
 class MidnightService {
@@ -169,8 +191,11 @@ class MidnightService {
       const connector = await waitFor1AM();
       if (!connector) throw new Error('1AM was not detected after 10 seconds. Install and unlock 1AM, then refresh this page and try again.');
 
-      const { api, state, configuration } = await connectProvider(connector);
+      const {
+        api, state, configuration, connectionStatus, unshieldedAddress, dust,
+      } = await connectProvider(connector, this.currentNetwork.chainId);
       const reportedNetwork = readFirstValue(state, ['network', 'networkId', 'chainId'])
+        || readFirstValue(connectionStatus, ['network', 'networkId', 'chainId'])
         || readFirstValue(configuration, ['network', 'networkId', 'chainId']);
       if (reportedNetwork && !String(reportedNetwork).toLowerCase().includes(this.currentNetwork.id)
         && String(reportedNetwork) !== String(this.currentNetwork.networkId)) {
@@ -178,10 +203,12 @@ class MidnightService {
       }
 
       this.walletApi = api;
-      this.walletAddress = readFirstValue(state, ['address', 'unshieldedAddress', 'walletAddress', 'accountAddress'])
+      this.walletAddress = readFirstValue(unshieldedAddress, ['unshieldedAddress', 'address'])
+        || readFirstValue(state, ['address', 'unshieldedAddress', 'walletAddress', 'accountAddress'])
         || readFirstValue(configuration, ['address', 'unshieldedAddress', 'walletAddress', 'accountAddress'])
         || '1AM connected (account not exposed by connector)';
-      this.dustBalance = Number(readFirstValue(state, ['dust', 'dustBalance', 'tDUST'])) || null;
+      this.dustBalance = Number(readFirstValue(dust, ['balance', 'dust', 'dustBalance', 'tDUST'])
+        ?? readFirstValue(state, ['dust', 'dustBalance', 'tDUST'])) || null;
       this.nightBalance = Number(readFirstValue(state, ['night', 'tNIGHT', 'nightBalance'])) || null;
       this.walletType = '1am';
       this.isConnected = true;
@@ -233,7 +260,7 @@ class MidnightService {
     this.assertDustBuffer();
 
     if (this.walletType !== 'demo') {
-      throw new Error('1AM is connected, but this app has no generated Midnight transaction binding yet. Compile the included Compact contract and wire its generated client before submitting a live transaction.');
+      throw new Error('Live deployment is not configured in this build: the generated Compact artifact and Midnight transaction providers are missing. 1AM has not submitted a transaction or spent DUST.');
     }
 
     onProofProgress?.({ step: 'WITNESS_EVALUATION', progress: 30, text: 'Preparing an isolated demo witness…' });
