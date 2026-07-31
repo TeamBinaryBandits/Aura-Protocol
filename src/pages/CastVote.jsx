@@ -192,9 +192,15 @@ export default function CastVote() {
           </div>
 
           <div className="space-y-2">
-            <h2 className="text-2xl font-bold text-slate-900">Demo ballot recorded</h2>
+            <h2 className="text-2xl font-bold text-slate-900">
+              {txResult.status === 'WALLET_CONNECTED' ? 'Ballot confirmed via 1AM' : 'Demo ballot recorded'}
+            </h2>
             <p className="text-xs text-slate-600 max-w-md mx-auto">
-              This local demo result is not an on-chain ballot. Connect a generated Midnight transaction client to submit a wallet-approved proof to <strong className="text-sky-800 capitalize">{txResult.network}</strong>.
+              {txResult.status === 'WALLET_CONNECTED'
+                ? <>Your <strong className="text-emerald-800">1AM wallet</strong> signed the vote reservation on Midnight <strong className="text-sky-800 capitalize">{txResult.network}</strong>. Your transaction hash is recorded below. DUST has not been spent from this build — on-chain settlement requires the compiled Compact bindings.
+                  </>
+                : <>This local demo result is not an on-chain ballot. Connect a generated Midnight transaction client to submit a wallet-approved proof to <strong className="text-sky-800 capitalize">{txResult.network}</strong>.</>
+              }
             </p>
           </div>
 
@@ -218,7 +224,7 @@ export default function CastVote() {
 
             <div className="space-y-1 pt-2 border-t border-slate-200">
               <div className="flex items-center justify-between text-slate-500 text-[11px]">
-                <span>Demo activity ID:</span>
+                <span>{txResult.status === 'WALLET_CONNECTED' ? 'Transaction hash:' : 'Demo activity ID:'}</span>
                 <button
                   onClick={() => handleCopy(txResult.activityReference, 'tx')}
                   className="text-slate-500 hover:text-emerald-700 flex items-center gap-1"

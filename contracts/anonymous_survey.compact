@@ -1,68 +1,62 @@
 // AURA - Privacy-Preserving Anonymous Feedback & Survey Protocol
-// Smart contract written in Compact language for Midnight Network (Preview & Preprod)
+// Compact smart contract for Midnight Network (Preview & Preprod)
 
 pragma language_version >= 0.14.0;
 
-import CompactLanguage;
+import CompactStandardLibrary;
 
+// ── Public ledger state (visible on-chain) ──────────────────────────────────
 export ledger poll_id: Counter;
-export ledger poll_title_hash: Cell<Bytes<32>>;
-export ledger active_network_id: Cell<Uint<8>>; // 1 = Preview, 2 = Preprod
+export ledger poll_title_hash: Bytes<32>;
+export ledger active_network_id: Uint<8>;         // 1 = Preview, 2 = Preprod
 export ledger total_ballots_cast: Counter;
 export ledger option_a_votes: Counter;
 export ledger option_b_votes: Counter;
 export ledger option_c_votes: Counter;
 export ledger option_d_votes: Counter;
-export ledger min_eligibility_threshold: Cell<Uint<32>>; // Confidential eligibility threshold
+export ledger min_eligibility_threshold: Uint<32>;
 
-// Private witness callbacks evaluated locally on user's device via 1AM Wallet / Midnight SDK
-witness secret_voter_key(): Bytes<32>;
-witness selected_option(): Uint<8>;
+// ── Private witnesses (evaluated locally on the user's device by 1AM Wallet) ─
 witness eligibility_score(): Uint<32>;
 
-// Circuit 1: Initialize survey on public ledger
+// ── Circuit 1: Initialize survey ─────────────────────────────────────────────
+// All survey parameters are public (disclose explicitly required).
 export circuit initialize_survey(
   title_hash: Bytes<32>,
   network_id: Uint<8>,
   threshold: Uint<32>
-): Void {
-  poll_title_hash.write(title_hash);
-  active_network_id.write(network_id);
-  min_eligibility_threshold.write(threshold);
+): [] {
+  poll_title_hash = disclose(title_hash);
+  active_network_id = disclose(network_id);
+  min_eligibility_threshold = disclose(threshold);
 }
 
-// Circuit 2: Cast zero-knowledge anonymous vote
-// Proves eligibility score >= threshold without revealing exact score or voter identity!
-export circuit cast_anonymous_vote(): Void {
-  const score = eligibility_score();
-  const req_threshold = min_eligibility_threshold.read();
-  
-  // Zero-Knowledge assertion check
-  assert score >= req_threshold "Ineligible to vote: secret score below threshold";
-  
-  // Generate voter commitment/nullifier off-chain
-  const sk = secret_voter_key();
-  const nullifier = persistent_hash<Bytes<32>>(sk);
-  
-  // Read private choice (0=A, 1=B, 2=C, 3=D)
-  const opt = selected_option();
-  
-  // Update public ledger tally counters
-  if (opt == 0) {
+// ── Circuit 2: Cast zero-knowledge anonymous vote ─────────────────────────────
+// The option chosen is a public input (it determines which counter to increment —
+// this is disclosed intentionally since the tally must be public).
+// The eligibility score is a private witness that stays local on the user's device.
+export circuit cast_anonymous_vote(opt: Uint<8>): [] {
+  const score: Uint<32> = eligibility_score();
+  const req_threshold: Uint<32> = min_eligibility_threshold;
+
+  assert(score >= req_threshold, "Ineligible: secret score below threshold");
+
+  const public_opt: Uint<8> = disclose(opt);
+
+  if (public_opt == 0) {
     option_a_votes.increment(1);
-  } else if (opt == 1) {
+  } else if (public_opt == 1) {
     option_b_votes.increment(1);
-  } else if (opt == 2) {
+  } else if (public_opt == 2) {
     option_c_votes.increment(1);
   } else {
     option_d_votes.increment(1);
   }
-  
+
   total_ballots_cast.increment(1);
 }
 
-// Circuit 3: Verifiable state disclosure helper
+// ── Circuit 3: Verifiable state disclosure ────────────────────────────────────
 export circuit get_public_summary(): Bytes<32> {
-  const hash_val = poll_title_hash.read();
-  return disclose(hash_val);
+  return disclose(poll_title_hash);
 }

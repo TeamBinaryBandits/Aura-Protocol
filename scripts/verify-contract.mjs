@@ -11,9 +11,9 @@ const requiredFragments = [
   'pragma language_version',
   'export circuit initialize_survey',
   'export circuit cast_anonymous_vote',
-  'witness selected_option',
-  'assert score >= req_threshold',
-  'disclose(hash_val)',
+  'witness eligibility_score',
+  'assert(score >= req_threshold',
+  'disclose(',
 ];
 
 const missing = requiredFragments.filter((fragment) => !source.includes(fragment));

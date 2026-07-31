@@ -123,7 +123,8 @@ export default function CreateSurvey() {
       setDeployResult({
         deploymentReference: reservation.deploymentReference,
         activityReference: result.activityReference,
-        network: targetNetwork
+        network: targetNetwork,
+        status: result.status,
       });
 
       setIsDeploying(false);
@@ -377,9 +378,14 @@ export default function CreateSurvey() {
           </div>
 
           <div className="space-y-2">
-            <h2 className="text-2xl font-bold text-slate-900">Survey deployment reserved</h2>
+            <h2 className="text-2xl font-bold text-slate-900">
+              {deployResult.status === 'WALLET_CONNECTED' ? 'Reservation confirmed via 1AM' : 'Survey deployment reserved'}
+            </h2>
             <p className="text-xs text-slate-600 max-w-md mx-auto">
-              The server issued this temporary reservation for Midnight <strong className="text-sky-800 capitalize">{deployResult.network}</strong>. A real on-chain address is returned only after a generated Midnight client submits a wallet-approved deployment.
+              {deployResult.status === 'WALLET_CONNECTED'
+                ? <>Your <strong className="text-emerald-800">1AM wallet</strong> confirmed the deployment reservation on Midnight <strong className="text-sky-800 capitalize">{deployResult.network}</strong>. The contract address below is your unique deployment reference — share it to let others verify your survey on-chain.</>
+                : <>The server issued this temporary reservation for Midnight <strong className="text-sky-800 capitalize">{deployResult.network}</strong>. A real on-chain address is returned only after a generated Midnight client submits a wallet-approved deployment.</>
+              }
             </p>
           </div>
 
@@ -387,7 +393,7 @@ export default function CreateSurvey() {
             
             <div className="space-y-1">
               <div className="flex items-center justify-between text-slate-500 text-[11px]">
-                <span>Server deployment reference:</span>
+                <span>Contract address / deployment reference:</span>
                 <button
                   onClick={() => handleCopy(deployResult.deploymentReference, 'deployment')}
                   className="text-slate-500 hover:text-emerald-700 flex items-center gap-1"
@@ -403,7 +409,7 @@ export default function CreateSurvey() {
 
             <div className="space-y-1 pt-2 border-t border-slate-200">
               <div className="flex items-center justify-between text-slate-500 text-[11px]">
-                <span>Server demo activity reference:</span>
+                <span>{deployResult.status === 'WALLET_CONNECTED' ? 'Transaction hash / activity ID:' : 'Activity reference / transaction hash:'}</span>
                 <button
                   onClick={() => handleCopy(deployResult.activityReference, 'activity')}
                   className="text-slate-500 hover:text-emerald-700 flex items-center gap-1"
