@@ -10,6 +10,9 @@ export ledger poll_id: Counter;
 export ledger poll_title_hash: Bytes<32>;
 export ledger active_network_id: Uint<8>;         // 1 = Preview, 2 = Preprod
 export ledger total_ballots_cast: Counter;
+// Public aggregate counters. Compact currently requires exported circuits to
+// modify public ledger state; an observer can therefore see tally deltas. The
+// privacy model documents this limitation and never promises secret ballots.
 export ledger option_a_votes: Counter;
 export ledger option_b_votes: Counter;
 export ledger option_c_votes: Counter;
@@ -26,20 +29,22 @@ export circuit initialize_survey(
   network_id: Uint<8>,
   threshold: Uint<32>
 ): [] {
+  poll_id.increment(1);
   poll_title_hash = disclose(title_hash);
   active_network_id = disclose(network_id);
   min_eligibility_threshold = disclose(threshold);
 }
 
 // ── Circuit 2: Cast zero-knowledge anonymous vote ─────────────────────────────
-// The option chosen is a public input (it determines which counter to increment —
-// this is disclosed intentionally since the tally must be public).
-// The eligibility score is a private witness that stays local on the user's device.
+// The eligibility score is evaluated as a private witness. The choice is
+// explicitly disclosed because each public option counter must be updated.
+// This is selective disclosure, not a secret-ballot contract.
 export circuit cast_anonymous_vote(opt: Uint<8>): [] {
   const score: Uint<32> = eligibility_score();
   const req_threshold: Uint<32> = min_eligibility_threshold;
 
   assert(score >= req_threshold, "Ineligible: secret score below threshold");
+  assert(opt <= 3, "Invalid ballot option");
 
   const public_opt: Uint<8> = disclose(opt);
 
