@@ -32,7 +32,7 @@ export default function Profile() {
             <ShieldCheck className="w-3.5 h-3.5" /> Wallet activity
           </div>
           <h1 className="mt-3 text-3xl font-extrabold tracking-tight text-slate-900">Your 1AM connection</h1>
-          <p className="mt-1 text-sm text-slate-600">AURA only displays values returned by the connector or clearly labelled local demo activity.</p>
+          <p className="mt-1 text-sm text-slate-600">AURA displays only 1AM connector values and finalized Midnight transaction records.</p>
         </div>
         {walletState.isConnected ? (
           <button type="button" onClick={() => midnightService.disconnectWallet()} className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-rose-50 hover:bg-rose-100 border border-rose-200 text-rose-800 text-xs font-semibold">
@@ -57,7 +57,7 @@ export default function Profile() {
             <p className="text-sm font-semibold text-slate-900 break-all">{walletState.walletAddress || 'Not connected'}</p>
             {walletState.walletAddress && <button type="button" onClick={() => copy(walletState.walletAddress, 'account')} className="text-slate-500 hover:text-emerald-700">{copied === 'account' ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}</button>}
           </div>
-          <p className="mt-3 text-xs text-slate-600">{walletState.walletType === 'demo' ? 'Local demo account' : walletState.walletType === '1am' ? '1AM Wallet account' : 'No wallet connection'}</p>
+          <p className="mt-3 text-xs text-slate-600">{walletState.walletType === '1am' ? '1AM Wallet account' : 'No wallet connection'}</p>
         </div>
         <div className="p-5 rounded-3xl bg-white border border-slate-200 shadow-sm">
           <p className="text-xs font-mono text-slate-500">Network</p>
@@ -83,14 +83,14 @@ export default function Profile() {
         ) : (
           <div className="mt-4 space-y-3">
             {walletState.transactions.map((transaction) => (
-              <article key={transaction.id} className="p-4 rounded-2xl bg-slate-50 border border-slate-200 text-xs">
+              <article key={transaction.txId || transaction.deploymentTxId || transaction.contractAddress} className="p-4 rounded-2xl bg-slate-50 border border-slate-200 text-xs">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                   <span className="font-mono font-semibold text-slate-800">{transaction.type.replaceAll('_', ' ')}</span>
-                  <span className="text-slate-500">{transaction.timestamp} · {transaction.status}</span>
+                  <span className="text-slate-500">{transaction.status}</span>
                 </div>
                 <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-2 font-mono text-[11px]">
-                  <p className="p-2.5 rounded-xl bg-white border border-slate-200 break-all text-slate-700"><span className="block mb-1 text-slate-500">Deployment reference</span>{transaction.deploymentReference}</p>
-                  <p className="p-2.5 rounded-xl bg-white border border-slate-200 break-all text-slate-700"><span className="block mb-1 text-slate-500">Activity reference</span>{transaction.activityReference}</p>
+                  <p className="p-2.5 rounded-xl bg-white border border-slate-200 break-all text-slate-700"><span className="block mb-1 text-slate-500">Contract address</span>{transaction.contractAddress}</p>
+                  <p className="p-2.5 rounded-xl bg-white border border-slate-200 break-all text-slate-700"><span className="block mb-1 text-slate-500">Finalized transaction hash</span>{transaction.txHash || transaction.deploymentTxHash}</p>
                 </div>
               </article>
             ))}

@@ -26,6 +26,7 @@ export default function Navbar() {
   const [isAudioPlaying, setIsAudioPlaying] = useState(false);
   const [isNetworkMenuOpen, setIsNetworkMenuOpen] = useState(false);
   const [isConnecting, setIsConnecting] = useState(false);
+  const [connectionError, setConnectionError] = useState(null);
 
   useEffect(() => {
     const unsubscribe = midnightService.subscribe(setWalletState);
@@ -34,7 +35,9 @@ export default function Navbar() {
 
   const handleConnect = async () => {
     setIsConnecting(true);
-    await midnightService.connectWallet();
+    setConnectionError(null);
+    const result = await midnightService.connectWallet();
+    if (!result.success) setConnectionError(result.error);
     setIsConnecting(false);
   };
 
@@ -242,6 +245,11 @@ export default function Navbar() {
 
         </div>
       </div>
+      {connectionError && (
+        <div role="alert" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-3 text-xs text-rose-800">
+          {connectionError}
+        </div>
+      )}
     </header>
   );
 }
