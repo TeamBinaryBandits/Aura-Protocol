@@ -75,28 +75,28 @@ export class Contract {
         if (!(typeof(contextOrig_0) === 'object' && contextOrig_0.currentQueryContext != undefined)) {
           __compactRuntime.typeError('initialize_survey',
                                      'argument 1 (as invoked from Typescript)',
-                                     'anonymous_survey.compact line 24 char 1',
+                                     'anonymous_survey.compact line 27 char 1',
                                      'CircuitContext',
                                      contextOrig_0)
         }
         if (!(title_hash_0.buffer instanceof ArrayBuffer && title_hash_0.BYTES_PER_ELEMENT === 1 && title_hash_0.length === 32)) {
           __compactRuntime.typeError('initialize_survey',
                                      'argument 1 (argument 2 as invoked from Typescript)',
-                                     'anonymous_survey.compact line 24 char 1',
+                                     'anonymous_survey.compact line 27 char 1',
                                      'Bytes<32>',
                                      title_hash_0)
         }
         if (!(typeof(network_id_0) === 'bigint' && network_id_0 >= 0n && network_id_0 <= 255n)) {
           __compactRuntime.typeError('initialize_survey',
                                      'argument 2 (argument 3 as invoked from Typescript)',
-                                     'anonymous_survey.compact line 24 char 1',
+                                     'anonymous_survey.compact line 27 char 1',
                                      'Uint<0..256>',
                                      network_id_0)
         }
         if (!(typeof(threshold_0) === 'bigint' && threshold_0 >= 0n && threshold_0 <= 4294967295n)) {
           __compactRuntime.typeError('initialize_survey',
                                      'argument 3 (argument 4 as invoked from Typescript)',
-                                     'anonymous_survey.compact line 24 char 1',
+                                     'anonymous_survey.compact line 27 char 1',
                                      'Uint<0..4294967296>',
                                      threshold_0)
         }
@@ -127,14 +127,14 @@ export class Contract {
         if (!(typeof(contextOrig_0) === 'object' && contextOrig_0.currentQueryContext != undefined)) {
           __compactRuntime.typeError('cast_anonymous_vote',
                                      'argument 1 (as invoked from Typescript)',
-                                     'anonymous_survey.compact line 38 char 1',
+                                     'anonymous_survey.compact line 42 char 1',
                                      'CircuitContext',
                                      contextOrig_0)
         }
         if (!(typeof(opt_0) === 'bigint' && opt_0 >= 0n && opt_0 <= 255n)) {
           __compactRuntime.typeError('cast_anonymous_vote',
                                      'argument 1 (argument 2 as invoked from Typescript)',
-                                     'anonymous_survey.compact line 38 char 1',
+                                     'anonymous_survey.compact line 42 char 1',
                                      'Uint<0..256>',
                                      opt_0)
         }
@@ -162,7 +162,7 @@ export class Contract {
         if (!(typeof(contextOrig_0) === 'object' && contextOrig_0.currentQueryContext != undefined)) {
           __compactRuntime.typeError('get_public_summary',
                                      'argument 1 (as invoked from Typescript)',
-                                     'anonymous_survey.compact line 60 char 1',
+                                     'anonymous_survey.compact line 65 char 1',
                                      'CircuitContext',
                                      contextOrig_0)
         }
@@ -332,7 +332,7 @@ export class Contract {
     if (!(typeof(result_0) === 'bigint' && result_0 >= 0n && result_0 <= 4294967295n)) {
       __compactRuntime.typeError('eligibility_score',
                                  'return value',
-                                 'anonymous_survey.compact line 20 char 1',
+                                 'anonymous_survey.compact line 23 char 1',
                                  'Uint<0..4294967296>',
                                  result_0)
     }
@@ -348,6 +348,22 @@ export class Contract {
                        network_id_0,
                        threshold_0)
   {
+    const tmp_0 = 1n;
+    __compactRuntime.queryLedgerState(context,
+                                      partialProofData,
+                                      [
+                                       { idx: { cached: false,
+                                                pushPath: true,
+                                                path: [
+                                                       { tag: 'value',
+                                                         value: { value: _descriptor_2.toValue(0n),
+                                                                  alignment: _descriptor_2.alignment() } }] } },
+                                       { addi: { immediate: parseInt(__compactRuntime.valueToBigInt(
+                                                              { value: _descriptor_0.toValue(tmp_0),
+                                                                alignment: _descriptor_0.alignment() }
+                                                                .value
+                                                            )) } },
+                                       { ins: { cached: true, n: 1 } }]);
     __compactRuntime.queryLedgerState(context,
                                       partialProofData,
                                       [
@@ -396,6 +412,7 @@ export class Contract {
                                                                                                   result: undefined } }]).value);
     __compactRuntime.assert(score_0 >= req_threshold_0,
                             'Ineligible: secret score below threshold');
+    __compactRuntime.assert(opt_0 <= 3n, 'Invalid ballot option');
     const public_opt_0 = opt_0;
     if (this._equal_0(public_opt_0, 0n)) {
       const tmp_0 = 1n;
