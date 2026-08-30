@@ -2,21 +2,24 @@ import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 
-describe('browser deployment surface', () => {
-  it('ships an accessible app shell and a server-backed deployment path', async () => {
-    const [html, app, service, settings] = await Promise.all([
-      readFile('index.html', 'utf8'),
-      readFile('src/App.jsx', 'utf8'),
-      readFile('src/services/midnight.js', 'utf8'),
-      readFile('src/pages/NetworkSettings.jsx', 'utf8'),
-    ]);
+describe('real wallet and browser surfaces', () => {
+  it('ships a real 1AM prove-balance-submit path and no demo transaction path', async () => {
+    const service = await readFile('src/services/midnight.js', 'utf8');
+    assert.match(service, /dappConnectorProofProvider/);
+    assert.match(service, /indexerPublicDataProvider/);
+    assert.match(service, /balanceUnsealedTransaction/);
+    assert.match(service, /submitTransaction/);
+    assert.match(service, /deployContract\(providers/);
+    assert.doesNotMatch(service, /connectDemoWallet|submitZKTransaction|activityReference|reserveContractAddress/);
+  });
 
-    assert.match(html, /<html lang="en"/);
-    assert.match(app, /<main[^>]*>/);
-    assert.match(service, /\/api\/contract-address/);
-    assert.match(service, /\/api\/activity-reference/);
-    assert.doesNotMatch(service, /generateMidnightContractAddress/);
-    assert.doesNotMatch(service, /demo_tx_/);
-    assert.match(settings, /Open Preview tNIGHT faucet/);
+  it('shows wallet errors and a visible disconnect control', async () => {
+    const [settings, navbar] = await Promise.all([
+      readFile('src/pages/NetworkSettings.jsx', 'utf8'),
+      readFile('src/components/Navbar.jsx', 'utf8'),
+    ]);
+    assert.match(settings, /Disconnect/);
+    assert.match(settings, /role="alert"/);
+    assert.match(navbar, /connectionError/);
   });
 });

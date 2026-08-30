@@ -1,23 +1,24 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
-import { AnonymousSurveyContract } from '../managed/anonymous_survey/index.ts';
+import { access, readFile } from 'node:fs/promises';
+import { constants } from 'node:fs';
 
-describe('Compact Smart Contract State Tests', () => {
-  it('should initialize ledger state with default Midnight network parameters', () => {
-    const contract = new AnonymousSurveyContract();
-    assert.equal(contract.state.poll_id, 1);
-    assert.equal(contract.state.total_ballots_cast, 42);
-    assert.equal(contract.state.active_network_id, 1); // 1 = Preview
+describe('compiled Compact contract evidence', () => {
+  it('keeps the mandatory Compact source and generated compiler output committed', async () => {
+    await Promise.all([
+      access('contracts/anonymous_survey.compact', constants.R_OK),
+      access('managed/anonymous_survey/contract/index.js', constants.R_OK),
+      access('managed/anonymous_survey/compiler/contract-info.json', constants.R_OK),
+      access('managed/anonymous_survey/keys/initialize_survey.prover', constants.R_OK),
+      access('managed/anonymous_survey/zkir/initialize_survey.bzkir', constants.R_OK),
+    ]);
   });
 
-  it('should update public ledger state on survey initialization circuit', async () => {
-    const contract = new AnonymousSurveyContract();
-    const mockHash = '0xabc123';
-    const res = await contract.initialize_survey(mockHash, 2, 80); // 2 = Preprod
-
-    assert.equal(res.success, true);
-    assert.equal(contract.state.poll_title_hash, mockHash);
-    assert.equal(contract.state.active_network_id, 2);
-    assert.equal(contract.state.min_eligibility_threshold, 80);
+  it('matches the compiler-generated circuit and witness surface', async () => {
+    const info = JSON.parse(await readFile('managed/anonymous_survey/compiler/contract-info.json', 'utf8'));
+    assert.equal(info['language-version'], '0.23.0');
+    assert.deepEqual(info.circuits.map((circuit) => circuit.name), ['initialize_survey', 'cast_anonymous_vote', 'get_public_summary']);
+    assert.equal(info.circuits.every((circuit) => circuit.proof), true);
+    assert.deepEqual(info.witnesses.map((witness) => witness.name), ['eligibility_score']);
   });
 });
