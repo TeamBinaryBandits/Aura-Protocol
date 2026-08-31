@@ -6,7 +6,7 @@ AURA is a React/Vite dApp for deploying and reading eligibility-gated survey con
 
 - Compact source: [`contracts/anonymous_survey.compact`](contracts/anonymous_survey.compact)
 - Generated Midnight artifacts: [`managed/anonymous_survey/`](managed/anonymous_survey/)
-- Contract/application tests: `npm test` (8 assertions across 4 suites)
+- Contract/application tests: `npm test` (10 passing tests across 5 suites)
 - CI workflow: [`.github/workflows/ci.yml`](.github/workflows/ci.yml), compiling Compact and running tests/build on every push and pull request
 - Product proposal: [`docs/product-proposal.md`](docs/product-proposal.md)
 - Live demo: add the Vercel URL after the first approved production deployment
@@ -16,7 +16,7 @@ AURA is a React/Vite dApp for deploying and reading eligibility-gated survey con
 
 | Network | Contract address | Evidence |
 | --- | --- | --- |
-| Preview | Not deployed yet | AURA will show the address only after 1AM returns a finalized deployment. |
+| Preview | [`88ee1d779afa1a534565c83dcc0f066b49364051d521bdef5eeed9b2927779aa`](https://explorer.1am.xyz/contract/88ee1d779afa1a534565c83dcc0f066b49364051d521bdef5eeed9b2927779aa) | Deployed with 1AM. Deployment transaction hash: `1f5c50115a19793006e4ebb2c45b78192481635e18af72c17a1dd0e98173e7ed` |
 | Preprod | Not deployed yet | No placeholder address is published. Deploy from **New Survey** with 1AM, then copy the returned address and transaction hashes here. |
 
 There is intentionally no fake Preprod address. A canonical Midnight contract address is determined by the wallet-authorized deployment transaction and confirmed by the indexer; generating a lookalike value on a server or terminal would be misleading and unsafe. Once deployed, set the finalized contract in `VITE_AURA_SURVEY_CONTRACTS_JSON` so Vercel can display it to all users.
