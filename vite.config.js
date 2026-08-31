@@ -3,21 +3,6 @@ import react from '@vitejs/plugin-react';
 import { readFile } from 'node:fs/promises';
 import { basename, dirname, resolve } from 'node:path';
 
-function bufferPolyfill() {
-  return {
-    name: 'aura-buffer-polyfill',
-    enforce: 'pre',
-    resolveId(id) {
-      if (id === 'buffer' || id === 'node:buffer') return 'virtual:buffer-polyfill';
-      return null;
-    },
-    load(id) {
-      if (id !== 'virtual:buffer-polyfill') return null;
-      return 'export const Buffer = globalThis.Buffer || class Buffer {}; export default { Buffer };';
-    },
-  };
-}
-
 function wasmPlugin() {
   return {
     name: 'aura-wasm-plugin',
@@ -99,7 +84,7 @@ function webSocketShim() {
 // without a private proof server or filesystem access.
 export default defineConfig({
   publicDir: 'managed',
-  plugins: [bufferPolyfill(), webSocketShim(), wasmPlugin(), react()],
+  plugins: [webSocketShim(), wasmPlugin(), react()],
   resolve: {
     alias: {
       // @subsquid (used by Midnight's indexer provider) imports Node's

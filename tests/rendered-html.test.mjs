@@ -17,13 +17,16 @@ describe('real wallet and browser surfaces', () => {
   });
 
   it('shows wallet errors and a visible disconnect control', async () => {
-    const [settings, navbar] = await Promise.all([
+    const [settings, navbar, main] = await Promise.all([
       readFile('src/pages/NetworkSettings.jsx', 'utf8'),
       readFile('src/components/Navbar.jsx', 'utf8'),
+      readFile('src/main.jsx', 'utf8'),
     ]);
     assert.match(settings, /Disconnect/);
     assert.match(settings, /role="alert"/);
     assert.match(navbar, /connectionError/);
+    assert.match(main, /import \{ Buffer \} from 'buffer'/);
+    assert.match(main, /globalThis\.Buffer = Buffer/);
   });
 
   it('loads the large Midnight Ledger WASM module asynchronously', async () => {
@@ -33,6 +36,7 @@ describe('real wallet and browser surfaces', () => {
     assert.match(viteConfig, /fsWrapperPath/);
     assert.match(viteConfig, /snippetEntries/);
     assert.match(viteConfig, /import wasm from \$1/);
+    assert.doesNotMatch(viteConfig, /virtual:buffer-polyfill/);
   });
 
   it('passes the complete WASM export object to wasm-bindgen', async () => {
