@@ -31,6 +31,12 @@ export const NETWORKS = {
   },
 };
 
+const PROVABLE_CIRCUIT_IDS = [
+  'initialize_survey',
+  'cast_anonymous_vote',
+  'get_public_summary',
+];
+
 /**
  * FetchZkConfigProvider requires an absolute HTTP(S) URL. Vercel preview and
  * production domains vary per deployment, so derive it from the browser that
@@ -44,6 +50,32 @@ export function getZkArtifactsUrl() {
   const basePath = String(env.BASE_URL || '/');
   const normalizedBasePath = basePath.endsWith('/') ? basePath : `${basePath}/`;
   return new URL(`${normalizedBasePath}anonymous_survey/`, origin).toString();
+}
+
+/** Use the browser fetch implementation; do not rely on a Node-oriented polyfill. */
+function createBrowserZkConfigProvider(FetchZkConfigProvider) {
+  if (typeof globalThis.fetch !== 'function') {
+    throw new Error('This browser cannot fetch Midnight proof artifacts. Use a current browser over HTTPS.');
+  }
+  return new FetchZkConfigProvider(getZkArtifactsUrl(), globalThis.fetch.bind(globalThis));
+}
+
+/**
+ * Verify the small, public verifier keys before asking 1AM to initialise its
+ * proof provider. This turns an opaque wallet/SDK error into an actionable
+ * deployment or browser-network error without generating a transaction.
+ */
+async function verifyZkArtifactAvailability(zkConfigProvider) {
+  try {
+    await Promise.all(
+      PROVABLE_CIRCUIT_IDS.map((circuitId) => zkConfigProvider.getVerifierKey(circuitId)),
+    );
+  } catch (error) {
+    const reason = error instanceof Error ? error.message : String(error);
+    throw new Error(
+      `Unable to load Compact verifier keys from ${getZkArtifactsUrl()}. ${reason}`,
+    );
+  }
 }
 
 const wait = (milliseconds) => new Promise((resolve) => setTimeout(resolve, milliseconds));
@@ -151,7 +183,8 @@ async function createLiveProviders(walletApi, configuration) {
     throw new Error('1AM did not return the shielded keys required to prepare a Midnight contract transaction.');
   }
 
-  const zkConfigProvider = new FetchZkConfigProvider(getZkArtifactsUrl());
+  const zkConfigProvider = createBrowserZkConfigProvider(FetchZkConfigProvider);
+  await verifyZkArtifactAvailability(zkConfigProvider);
   const proofProvider = await dappConnectorProofProvider(walletApi, zkConfigProvider, CostModel.initialCostModel());
 
   return {

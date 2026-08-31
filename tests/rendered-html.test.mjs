@@ -11,7 +11,10 @@ describe('real wallet and browser surfaces', () => {
     assert.match(service, /submitTransaction/);
     assert.match(service, /deployContract\(providers/);
     assert.match(service, /getZkArtifactsUrl/);
-    assert.match(service, /new FetchZkConfigProvider\(getZkArtifactsUrl\(\)\)/);
+    assert.match(service, /createBrowserZkConfigProvider/);
+    assert.match(service, /globalThis\.fetch\.bind\(globalThis\)/);
+    assert.match(service, /verifyZkArtifactAvailability/);
+    assert.match(service, /PROVABLE_CIRCUIT_IDS/);
     assert.doesNotMatch(service, /new FetchZkConfigProvider\('\/anonymous_survey'\)/);
     assert.doesNotMatch(service, /connectDemoWallet|submitZKTransaction|activityReference|reserveContractAddress/);
   });
