@@ -1,6 +1,7 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import { readFile } from 'node:fs/promises';
+import { basename, dirname, resolve } from 'node:path';
 
 function bufferPolyfill() {
   return {
@@ -26,8 +27,24 @@ function wasmPlugin() {
       const binary = await readFile(id);
       const base64 = binary.toString('base64');
       const bgPath = id.replace(/\.wasm$/, '.js');
+      const fsWrapperPath = id.replace(/_bg\.wasm$/, '_fs.js');
+      const fsWrapper = await readFile(fsWrapperPath, 'utf8');
+      const snippetEntries = [...fsWrapper.matchAll(/import \* as ([\w$]+) from '([^']*\/snippets\/[^']+\.js)';/g)]
+        .map(([, binding, specifier]) => ({
+          binding,
+          specifier,
+          absolutePath: resolve(dirname(fsWrapperPath), specifier),
+        }));
+      const snippetImports = snippetEntries
+        .map(({ binding, absolutePath }) => `import * as ${binding} from ${JSON.stringify(absolutePath)};`)
+        .join('\n');
+      const importMapEntries = [
+        `${JSON.stringify(`./${basename(bgPath)}`)}: bg`,
+        ...snippetEntries.map(({ binding, specifier }) => `${JSON.stringify(specifier)}: ${binding}`),
+      ].join(',\n');
       return `
         import * as bg from ${JSON.stringify(bgPath)};
+        ${snippetImports}
         const bytes = Uint8Array.from(atob("${base64}"), c => c.charCodeAt(0));
         // The Midnight Ledger WASM binary is >8 MB. Chromium rejects a
         // synchronous WebAssembly.Module constructor for binaries that large
@@ -35,8 +52,7 @@ function wasmPlugin() {
         // blocking the app and preserves the module namespace expected by the
         // Ledger package.
         const { instance } = await WebAssembly.instantiate(bytes, {
-          './midnight_onchain_runtime_wasm_bg.js': bg,
-          './midnight_ledger_wasm_bg.js': bg,
+          ${importMapEntries}
         });
         export default instance.exports;
         export const __wbindgen_start = instance.exports.__wbindgen_start || (() => {});

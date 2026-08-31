@@ -27,5 +27,7 @@ describe('real wallet and browser surfaces', () => {
     const viteConfig = await readFile('vite.config.js', 'utf8');
     assert.match(viteConfig, /await WebAssembly\.instantiate\(bytes/);
     assert.doesNotMatch(viteConfig, /new WebAssembly\.Module\(bytes\)/);
+    assert.match(viteConfig, /fsWrapperPath/);
+    assert.match(viteConfig, /snippetEntries/);
   });
 });
