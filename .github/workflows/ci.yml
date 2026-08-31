@@ -27,6 +27,8 @@ jobs:
         run: |
           curl --proto '=https' --tlsv1.2 -LsSf https://github.com/midnightntwrk/compact/releases/latest/download/compact-installer.sh | sh
           echo "$HOME/.local/bin" >> $GITHUB_PATH
+          "$HOME/.local/bin/compact" update 0.31.1
+          "$HOME/.local/bin/compact" compile --version
 
       - name: Compile Compact source from scratch
         run: compact compile contracts/anonymous_survey.compact "$RUNNER_TEMP/aura-compact-artifacts"
