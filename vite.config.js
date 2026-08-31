@@ -29,8 +29,12 @@ function wasmPlugin() {
       return `
         import * as bg from ${JSON.stringify(bgPath)};
         const bytes = Uint8Array.from(atob("${base64}"), c => c.charCodeAt(0));
-        const module = new WebAssembly.Module(bytes);
-        const instance = new WebAssembly.Instance(module, {
+        // The Midnight Ledger WASM binary is >8 MB. Chromium rejects a
+        // synchronous WebAssembly.Module constructor for binaries that large
+        // on the UI thread. Its async instantiate API compiles without
+        // blocking the app and preserves the module namespace expected by the
+        // Ledger package.
+        const { instance } = await WebAssembly.instantiate(bytes, {
           './midnight_onchain_runtime_wasm_bg.js': bg,
           './midnight_ledger_wasm_bg.js': bg,
         });

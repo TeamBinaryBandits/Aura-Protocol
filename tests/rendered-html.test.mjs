@@ -22,4 +22,10 @@ describe('real wallet and browser surfaces', () => {
     assert.match(settings, /role="alert"/);
     assert.match(navbar, /connectionError/);
   });
+
+  it('loads the large Midnight Ledger WASM module asynchronously', async () => {
+    const viteConfig = await readFile('vite.config.js', 'utf8');
+    assert.match(viteConfig, /await WebAssembly\.instantiate\(bytes/);
+    assert.doesNotMatch(viteConfig, /new WebAssembly\.Module\(bytes\)/);
+  });
 });
