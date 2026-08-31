@@ -10,6 +10,9 @@ describe('real wallet and browser surfaces', () => {
     assert.match(service, /balanceUnsealedTransaction/);
     assert.match(service, /submitTransaction/);
     assert.match(service, /deployContract\(providers/);
+    assert.match(service, /getZkArtifactsUrl/);
+    assert.match(service, /new FetchZkConfigProvider\(getZkArtifactsUrl\(\)\)/);
+    assert.doesNotMatch(service, /new FetchZkConfigProvider\('\/anonymous_survey'\)/);
     assert.doesNotMatch(service, /connectDemoWallet|submitZKTransaction|activityReference|reserveContractAddress/);
   });
 

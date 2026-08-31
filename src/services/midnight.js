@@ -31,6 +31,21 @@ export const NETWORKS = {
   },
 };
 
+/**
+ * FetchZkConfigProvider requires an absolute HTTP(S) URL. Vercel preview and
+ * production domains vary per deployment, so derive it from the browser that
+ * is actually submitting the transaction instead of hard-coding a hostname.
+ */
+export function getZkArtifactsUrl() {
+  const origin = globalThis.location?.origin;
+  if (!origin || origin === 'null') {
+    throw new Error('Unable to resolve this deployment origin for Midnight proof artifacts. Open AURA over HTTPS and try again.');
+  }
+  const basePath = String(env.BASE_URL || '/');
+  const normalizedBasePath = basePath.endsWith('/') ? basePath : `${basePath}/`;
+  return new URL(`${normalizedBasePath}anonymous_survey/`, origin).toString();
+}
+
 const wait = (milliseconds) => new Promise((resolve) => setTimeout(resolve, milliseconds));
 const toHex = (bytes) => Array.from(bytes, (byte) => byte.toString(16).padStart(2, '0')).join('');
 const asText = (value) => (typeof value === 'string' ? value : value?.toString?.() || '');
@@ -76,11 +91,12 @@ async function makeSurveyCompiledContract(eligibilityWitness = unavailableEligib
     import('@midnight-ntwrk/compact-js'),
     import('../../managed/anonymous_survey/contract/index.js'),
   ]);
+  const zkArtifactsUrl = getZkArtifactsUrl();
   return CompiledContract.make('anonymous_survey', Contract).pipe(
     CompiledContract.withWitnesses({
       eligibility_score: (context) => [context.currentPrivateState, eligibilityWitness()],
     }),
-    CompiledContract.withCompiledFileAssets('/anonymous_survey'),
+    CompiledContract.withCompiledFileAssets(zkArtifactsUrl),
   );
 }
 
@@ -135,7 +151,7 @@ async function createLiveProviders(walletApi, configuration) {
     throw new Error('1AM did not return the shielded keys required to prepare a Midnight contract transaction.');
   }
 
-  const zkConfigProvider = new FetchZkConfigProvider('/anonymous_survey');
+  const zkConfigProvider = new FetchZkConfigProvider(getZkArtifactsUrl());
   const proofProvider = await dappConnectorProofProvider(walletApi, zkConfigProvider, CostModel.initialCostModel());
 
   return {
