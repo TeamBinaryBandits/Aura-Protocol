@@ -59,6 +59,20 @@ function wasmPlugin() {
         export const memory = instance.exports.memory;
       `;
     },
+    transform(code, id) {
+      // The generated Ledger entry point imports the WASM module as a namespace
+      // and then hands that namespace to wasm-bindgen. Our async module exposes
+      // the raw instance through its default export, which contains every WASM
+      // binding instead of only the statically declared ESM exports.
+      if (!id.endsWith('_wasm.js') || !code.includes('__wbg_set_wasm(wasm)')) return null;
+      return {
+        code: code.replace(
+          /import \* as wasm from ("[^\"]+_bg\.wasm");/,
+          'import wasm from $1;',
+        ),
+        map: null,
+      };
+    },
   };
 }
 

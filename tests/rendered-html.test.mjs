@@ -29,5 +29,16 @@ describe('real wallet and browser surfaces', () => {
     assert.doesNotMatch(viteConfig, /new WebAssembly\.Module\(bytes\)/);
     assert.match(viteConfig, /fsWrapperPath/);
     assert.match(viteConfig, /snippetEntries/);
+    assert.match(viteConfig, /import wasm from \$1/);
+  });
+
+  it('passes the complete WASM export object to wasm-bindgen', async () => {
+    const { default: config } = await import('../vite.config.js');
+    const plugin = config.plugins.find(({ name }) => name === 'aura-wasm-plugin');
+    const transformed = plugin.transform(
+      'import * as wasm from "./midnight_ledger_wasm_bg.wasm";\n__wbg_set_wasm(wasm);',
+      'midnight_ledger_wasm.js',
+    );
+    assert.match(transformed.code, /import wasm from "\.\/midnight_ledger_wasm_bg\.wasm"/);
   });
 });
