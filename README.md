@@ -9,8 +9,11 @@ AURA is a React/Vite dApp for deploying and reading eligibility-gated survey con
 - Contract/application tests: `npm test` (10 passing tests across 5 suites)
 - CI workflow: [`.github/workflows/ci.yml`](.github/workflows/ci.yml), compiling Compact and running tests/build on every push and pull request
 - Product proposal: [`docs/product-proposal.md`](docs/product-proposal.md)
-- Live demo: add the Vercel URL after the first approved production deployment
-- Demo video and a genuine terminal screenshot of `npm test`: supplied by the maintainer after running this revision
+- Live demo: https://aura-protocol-eight.vercel.app/
+- Demo video: https://drive.google.com/file/d/1tP3um-PsVwlxObZV3BsJNHupmPdowzf_/view?usp=sharing
+- Test paased:
+- <img width="957" height="575" alt="image" src="https://github.com/user-attachments/assets/d79f5baa-9cf6-4e60-b771-66d053503dc0" />
+
 
 ## Live deployment status
 
