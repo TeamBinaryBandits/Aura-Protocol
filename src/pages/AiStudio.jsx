@@ -3,6 +3,7 @@ import { Bot, ChevronRight, LockKeyhole, Sparkles } from 'lucide-react';
 import { AI_FEATURES } from '../services/aura-ai';
 import SurveyBriefBuilder from '../components/ai/SurveyBriefBuilder';
 import DisclosureExplainer from '../components/ai/DisclosureExplainer';
+import CopyReviewer from '../components/ai/CopyReviewer';
 
 export default function AiStudio() {
   const [selected, setSelected] = useState(AI_FEATURES[0].id);
@@ -24,7 +25,7 @@ export default function AiStudio() {
         <nav aria-label="AURA Assistant features" className="rounded-3xl border border-slate-200 bg-white/90 p-3 shadow-sm space-y-1">
           {AI_FEATURES.map((item) => <button key={item.id} type="button" onClick={() => setSelected(item.id)} className={`w-full text-left rounded-2xl p-4 transition-colors ${item.id === selected ? 'bg-emerald-700 text-white shadow-sm' : 'hover:bg-emerald-50 text-slate-800'}`}><span className="block text-[10px] uppercase tracking-wider font-mono opacity-70">{item.category}</span><span className="mt-1 flex items-center justify-between gap-3 font-semibold text-sm">{item.title}<ChevronRight className="w-4 h-4 shrink-0" /></span><span className="mt-1 block text-xs leading-relaxed opacity-75">{item.description}</span></button>)}
         </nav>
-        <section className="rounded-3xl border border-emerald-200 bg-white/90 p-7 sm:p-8 shadow-sm"><div className="flex items-start gap-3"><div className="rounded-2xl bg-emerald-100 p-3 text-emerald-800"><Bot className="w-5 h-5" /></div><div><p className="text-xs font-mono uppercase text-emerald-800">Selected tool</p><h2 className="mt-1 text-xl font-bold text-slate-900">{feature.title}</h2><p className="mt-2 text-sm leading-relaxed text-slate-600">{feature.description}</p></div></div>{selected === 'survey_brief' ? <SurveyBriefBuilder /> : selected === 'disclosure_explainer' ? <DisclosureExplainer /> : <div className="mt-7 rounded-2xl border border-dashed border-slate-300 bg-slate-50 px-5 py-8 text-center text-sm text-slate-600">This public-input tool is being prepared.</div>}</section>
+        <section className="rounded-3xl border border-emerald-200 bg-white/90 p-7 sm:p-8 shadow-sm"><div className="flex items-start gap-3"><div className="rounded-2xl bg-emerald-100 p-3 text-emerald-800"><Bot className="w-5 h-5" /></div><div><p className="text-xs font-mono uppercase text-emerald-800">Selected tool</p><h2 className="mt-1 text-xl font-bold text-slate-900">{feature.title}</h2><p className="mt-2 text-sm leading-relaxed text-slate-600">{feature.description}</p></div></div>{selected === 'survey_brief' ? <SurveyBriefBuilder /> : selected === 'disclosure_explainer' ? <DisclosureExplainer /> : selected === 'copy_review' ? <CopyReviewer /> : <div className="mt-7 rounded-2xl border border-dashed border-slate-300 bg-slate-50 px-5 py-8 text-center text-sm text-slate-600">This public-input tool is being prepared.</div>}</section>
       </section>
     </div>
   );
