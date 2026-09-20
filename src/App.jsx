@@ -11,6 +11,7 @@ import NetworkSettings from './pages/NetworkSettings';
 import Profile from './pages/Profile';
 import ContractExplorer from './pages/ContractExplorer';
 import Credentials from './pages/Credentials';
+import AiStudio from './pages/AiStudio';
 
 export default function App() {
   return (
@@ -34,6 +35,7 @@ export default function App() {
             <Route path="/profile" element={<Profile />} />
             <Route path="/contracts" element={<ContractExplorer />} />
             <Route path="/credentials" element={<Credentials />} />
+            <Route path="/assistant" element={<AiStudio />} />
           </Routes>
         </main>
 
