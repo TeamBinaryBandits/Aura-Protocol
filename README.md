@@ -12,6 +12,14 @@ AURA is a React/Vite dApp for deploying and reading eligibility-gated survey con
 - Live demo: add the Vercel URL after the first approved production deployment
 - Demo video and a genuine terminal screenshot of `npm test`: supplied by the maintainer after running this revision
 
+## Screenshots of live app
+
+| Dashboard | Deploy a survey |
+| --- | --- |
+| ![AURA live dashboard](docs/screenshots/live-dashboard.png) | ![AURA new-survey flow](docs/screenshots/new-survey.png) |
+| Privacy model | Eligibility credentials |
+| ![AURA privacy model](docs/screenshots/privacy-model.png) | ![AURA eligibility credentials](docs/screenshots/eligibility-credentials.png) |
+
 ## Live deployment status
 
 | Network | Contract address | Evidence |
