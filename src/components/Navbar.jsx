@@ -138,6 +138,28 @@ export default function Navbar() {
           >
             Compact Circuit
           </Link>
+
+          <Link
+            to="/assistant"
+            className={`px-3.5 py-2 rounded-xl text-xs font-medium transition-all ${
+              location.pathname === '/assistant'
+                ? 'bg-emerald-700 text-white shadow-sm'
+                : 'text-slate-700 hover:text-emerald-900 hover:bg-emerald-100/60'
+            }`}
+          >
+            AI Studio
+          </Link>
+
+          <Link
+            to="/admin"
+            className={`px-3.5 py-2 rounded-xl text-xs font-medium transition-all ${
+              location.pathname === '/admin'
+                ? 'bg-emerald-700 text-white shadow-sm'
+                : 'text-slate-700 hover:text-emerald-900 hover:bg-emerald-100/60'
+            }`}
+          >
+            Admin
+          </Link>
         </nav>
 
         {/* Right Actions */}
