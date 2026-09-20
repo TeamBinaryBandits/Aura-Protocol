@@ -13,6 +13,7 @@ export default function Home() {
   const [states, setStates] = useState({});
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [wallet, setWallet] = useState(() => midnightService.snapshot());
 
   const refresh = useCallback(async () => {
     const known = listKnownSurveys();
@@ -33,6 +34,10 @@ export default function Home() {
   }, []);
 
   useEffect(() => { refresh(); }, [refresh]);
+  useEffect(() => midnightService.subscribe(setWallet), []);
+
+  const indexedCount = Object.values(states).filter((entry) => entry.ledger).length;
+  const pendingCount = Object.values(states).filter((entry) => entry.error).length;
 
   return (
     <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-8">
@@ -63,6 +68,13 @@ export default function Home() {
           <p className="text-xs leading-relaxed text-slate-300">The Compact circuit proves eligibility from a private witness. Its option argument is deliberately disclosed to update a public tally, so AURA does not market this contract as a secret-ballot system.</p>
           <Link to="/explorer" className="inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-300 hover:text-emerald-200">Read the disclosure model <ChevronRight className="w-3.5 h-3.5" /></Link>
         </aside>
+      </section>
+
+      <section aria-label="Live operations overview" className="grid sm:grid-cols-2 xl:grid-cols-4 gap-4">
+        <article className="rounded-3xl border border-emerald-200 bg-white/90 p-5 shadow-sm"><p className="text-[11px] font-mono uppercase text-slate-500">Registered contracts</p><p className="mt-2 text-2xl font-extrabold text-slate-950">{surveys.length}</p><p className="mt-1 text-xs text-slate-600">Finalized registry entries only</p></article>
+        <article className="rounded-3xl border border-emerald-200 bg-white/90 p-5 shadow-sm"><p className="text-[11px] font-mono uppercase text-slate-500">Indexer responses</p><p className="mt-2 text-2xl font-extrabold text-slate-950">{indexedCount}</p><p className="mt-1 text-xs text-slate-600">Read during this dashboard session</p></article>
+        <article className="rounded-3xl border border-emerald-200 bg-white/90 p-5 shadow-sm"><p className="text-[11px] font-mono uppercase text-slate-500">Wallet connection</p><p className="mt-2 text-xl font-extrabold text-slate-950">{wallet.isConnected ? '1AM connected' : 'Not connected'}</p><p className="mt-1 text-xs text-slate-600">{wallet.isConnected ? `${wallet.network?.name || 'Selected network'}` : 'Connect only when you are ready to transact'}</p></article>
+        <article className="rounded-3xl border border-emerald-200 bg-white/90 p-5 shadow-sm"><p className="text-[11px] font-mono uppercase text-slate-500">Indexer attention</p><p className="mt-2 text-2xl font-extrabold text-slate-950">{pendingCount}</p><p className="mt-1 text-xs text-slate-600">Queries awaiting a successful response</p></article>
       </section>
 
       <section className="space-y-4" aria-labelledby="onchain-surveys-heading">
