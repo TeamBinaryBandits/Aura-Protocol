@@ -105,6 +105,17 @@ VITE_AURA_SURVEY_CONTRACTS_JSON=[]
 
 Prefer the connector-provided URLs when connected: they respect the user's wallet privacy and service choices. Never set a seed phrase, private key, eligibility score, or credential payload in Vercel variables.
 
+### Gemini 2 assistant configuration
+
+The five user-facing Assistant tools and two public-data Admin tools call the server-side Vercel function at `/api/aura-ai`. Set these **server-only** environment variables in Vercel; never prefix the key with `VITE_` and never place it in browser code:
+
+```dotenv
+GEMINI_API_KEY=<Google AI Studio server API key>
+GEMINI_MODEL=gemini-2.0-flash
+```
+
+The function accepts only bounded public metadata, sets `store: false` for Gemini requests, and rejects unsupported tools. The assistant is advisory: it cannot access 1AM keys, credential witnesses, proof inputs, private eligibility values, serialized transactions, or contract deployment authority. Protect `/admin` with your organization’s Vercel authentication before enabling it for an operations team.
+
 ## Pre-submission checklist
 
 - [x] Compact source and generated artifacts committed
