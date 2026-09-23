@@ -2,6 +2,10 @@
 
 AURA is a React/Vite dApp for deploying and reading eligibility-gated survey contracts on Midnight Preview and Preprod. The browser uses 1AM's DApp Connector to prove, balance, sign, and submit. It does not create a wallet, contract address, transaction hash, ballot, credential, or balance locally.
 
+## X handle
+
+Follow AURA Protocol on X: [@AuraProtoc8k](https://x.com/AuraProtoc8k)
+
 ## Submission evidence
 
 - Compact source: [`contracts/anonymous_survey.compact`](contracts/anonymous_survey.compact)
@@ -70,8 +74,8 @@ The frontend uses official Midnight packages including `@midnight-ntwrk/midnight
 
 1. Install and unlock [1AM Wallet](https://chromewebstore.google.com/detail/1am/bphnkdkcnfhompoegfpgnkidcjfbojjp).
 2. Select the same network in 1AM and AURA.
-3. For Preview, use the [Preview tNIGHT faucet](https://faucet.preview.midnight.network), then register received tNIGHT in 1AM to generate tDUST.
-4. AURA requires the wallet-reported balance to include a 30 DUST safety buffer after a 12 DUST estimate. The wallet's final fee and sponsorship decision is authoritative.
+3. Fund the matching wallet address with the [Preview faucet](https://faucet.preview.midnight.network) or [Preprod faucet](https://faucet.preprod.midnight.network), then allow 1AM to sync/register the received tNIGHT.
+4. AURA displays a 30 DUST safety target after a 12 DUST estimate. The wallet's fee and sponsorship decision is authoritative; set `VITE_REQUIRE_DUST_BUFFER=true` only if your deployment must enforce the client-side threshold.
 
 Wallet errors and disconnect controls are visible in **Network & wallet readiness** and **Profile**. No demo wallet button exists.
 
@@ -92,14 +96,16 @@ The CI workflow installs Compact, compiles the committed source to a clean tempo
 
 ## Vercel configuration
 
-Vercel serves the generated ZK keys and binary ZKIR through Vite's `publicDir: 'managed'`; the client retrieves only public compiler artifacts. It does not need, accept, or store a wallet private key. Configure these public values only when you want read-only indexer access before a user connects 1AM:
+Vercel serves the generated ZK keys and binary ZKIR through Vite's `publicDir: 'managed'`; the client retrieves only public compiler artifacts. It does not need, accept, or store a wallet private key. AURA defaults to the official Preview and Preprod v4 indexers below; set these variables only to override them:
 
 ```dotenv
-VITE_MIDNIGHT_PREVIEW_INDEXER_URI=https://<preview-indexer>/graphql
-VITE_MIDNIGHT_PREVIEW_INDEXER_WS_URI=wss://<preview-indexer>/graphql
-VITE_MIDNIGHT_PREPROD_INDEXER_URI=https://<preprod-indexer>/graphql
-VITE_MIDNIGHT_PREPROD_INDEXER_WS_URI=wss://<preprod-indexer>/graphql
+VITE_MIDNIGHT_PREVIEW_INDEXER_URI=https://indexer.preview.midnight.network/api/v4/graphql
+VITE_MIDNIGHT_PREVIEW_INDEXER_WS_URI=wss://indexer.preview.midnight.network/api/v4/graphql/ws
+VITE_MIDNIGHT_PREPROD_INDEXER_URI=https://indexer.preprod.midnight.network/api/v4/graphql
+VITE_MIDNIGHT_PREPROD_INDEXER_WS_URI=wss://indexer.preprod.midnight.network/api/v4/graphql/ws
+VITE_MIDNIGHT_DEFAULT_NETWORK=preprod
 VITE_MIDNIGHT_DUST_BUFFER=30
+VITE_REQUIRE_DUST_BUFFER=false
 VITE_AURA_SURVEY_CONTRACTS_JSON=[]
 ```
 

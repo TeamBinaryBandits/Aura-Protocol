@@ -11,23 +11,25 @@ const env = import.meta.env ?? {};
 
 export const ONE_AM_INSTALL_URL = 'https://chromewebstore.google.com/detail/1am/bphnkdkcnfhompoegfpgnkidcjfbojjp';
 export const PREVIEW_FAUCET_URL = 'https://faucet.preview.midnight.network';
-export const MIN_DUST_BUFFER = Number(env.VITE_MIDNIGHT_DUST_BUFFER || 30);
+export const PREPROD_FAUCET_URL = 'https://faucet.preprod.midnight.network';
+export const MIN_DUST_BUFFER = Number.isFinite(Number(env.VITE_MIDNIGHT_DUST_BUFFER)) ? Number(env.VITE_MIDNIGHT_DUST_BUFFER) : 30;
 export const ESTIMATED_TRANSACTION_DUST = 12;
+export const REQUIRE_DUST_BUFFER = String(env.VITE_REQUIRE_DUST_BUFFER || '').toLowerCase() === 'true';
 
 export const NETWORKS = {
   PREVIEW: {
     id: 'preview', name: 'Midnight Preview', walletNetworkId: 'preview', contractNetworkId: 1,
     faucetUrl: PREVIEW_FAUCET_URL,
     tokenGuideUrl: 'https://docs.midnight.network/guides/acquire-tokens',
-    indexerUri: env.VITE_MIDNIGHT_PREVIEW_INDEXER_URI || null,
-    indexerWsUri: env.VITE_MIDNIGHT_PREVIEW_INDEXER_WS_URI || null,
+    indexerUri: env.VITE_MIDNIGHT_PREVIEW_INDEXER_URI || 'https://indexer.preview.midnight.network/api/v4/graphql',
+    indexerWsUri: env.VITE_MIDNIGHT_PREVIEW_INDEXER_WS_URI || 'wss://indexer.preview.midnight.network/api/v4/graphql/ws',
   },
   PREPROD: {
     id: 'preprod', name: 'Midnight Preprod', walletNetworkId: 'preprod', contractNetworkId: 2,
-    faucetUrl: null,
+    faucetUrl: PREPROD_FAUCET_URL,
     tokenGuideUrl: 'https://docs.midnight.network/guides/acquire-tokens',
-    indexerUri: env.VITE_MIDNIGHT_PREPROD_INDEXER_URI || null,
-    indexerWsUri: env.VITE_MIDNIGHT_PREPROD_INDEXER_WS_URI || null,
+    indexerUri: env.VITE_MIDNIGHT_PREPROD_INDEXER_URI || 'https://indexer.preprod.midnight.network/api/v4/graphql',
+    indexerWsUri: env.VITE_MIDNIGHT_PREPROD_INDEXER_WS_URI || 'wss://indexer.preprod.midnight.network/api/v4/graphql/ws',
   },
 };
 
@@ -104,6 +106,8 @@ function numberOrNull(value) {
   return Number.isFinite(numeric) ? numeric : null;
 }
 
+const normalizeNetworkId = (value) => String(value || '').trim().toLowerCase();
+
 /** A cryptographic, stable 32-byte title commitment for the public ledger. */
 export async function hashTitleToBytes32(title) {
   const normalized = String(title || '').trim();
@@ -158,7 +162,7 @@ function createSessionPrivateStateProvider() {
   };
 }
 
-async function createLiveProviders(walletApi, configuration) {
+async function createLiveProviders(walletApi, configuration, network) {
   const [
     { Transaction, CostModel },
     { dappConnectorProofProvider },
@@ -170,8 +174,9 @@ async function createLiveProviders(walletApi, configuration) {
     import('@midnight-ntwrk/midnight-js-fetch-zk-config-provider'),
     import('@midnight-ntwrk/midnight-js-indexer-public-data-provider'),
   ]);
-  const indexerUri = configuration?.indexerUri;
-  const indexerWsUri = configuration?.indexerWsUri;
+  const publicIndexer = getConfiguredIndexer(network?.id);
+  const indexerUri = configuration?.indexerUri || publicIndexer?.indexerUri;
+  const indexerWsUri = configuration?.indexerWsUri || publicIndexer?.indexerWsUri;
   if (!indexerUri || !indexerWsUri) {
     throw new Error('1AM did not provide its Midnight indexer URLs. Unlock/update the wallet and reconnect.');
   }
@@ -240,13 +245,14 @@ export function getConfiguredIndexer(networkKey) {
 
 class MidnightService {
   constructor() {
-    this.currentNetwork = NETWORKS.PREVIEW;
+    this.currentNetwork = NETWORKS[String(env.VITE_MIDNIGHT_DEFAULT_NETWORK || 'preprod').toUpperCase()] || NETWORKS.PREPROD;
     this.isConnected = false;
     this.walletAddress = null;
     this.dustBalance = null;
     this.nightBalance = null;
     this.walletApi = null;
     this.walletConfiguration = null;
+    this.connectedNetworkId = null;
     this.transactions = [];
     this.lastError = null;
     this.listeners = [];
@@ -257,7 +263,7 @@ class MidnightService {
       isConnected: this.isConnected, walletAddress: this.walletAddress, network: this.currentNetwork,
       dustBalance: this.dustBalance, nightBalance: this.nightBalance,
       walletType: this.isConnected ? '1am' : null, transactions: this.transactions,
-      dustBuffer: MIN_DUST_BUFFER, lastError: this.lastError,
+      dustBuffer: MIN_DUST_BUFFER, requireDustBuffer: REQUIRE_DUST_BUFFER, lastError: this.lastError,
     };
   }
 
@@ -272,7 +278,18 @@ class MidnightService {
   setNetwork(networkKey) {
     const network = NETWORKS[String(networkKey || '').toUpperCase()];
     if (!network) return false;
+    const changed = this.currentNetwork.id !== network.id;
     this.currentNetwork = network;
+    if (changed && this.isConnected) {
+      this.isConnected = false;
+      this.walletAddress = null;
+      this.dustBalance = null;
+      this.nightBalance = null;
+      this.walletApi = null;
+      this.walletConfiguration = null;
+      this.connectedNetworkId = null;
+      this.lastError = `Network changed to ${network.name}. Reconnect 1AM so its wallet and indexer use the same network.`;
+    }
     void import('@midnight-ntwrk/midnight-js-network-id').then(({ setNetworkId }) => setNetworkId(network.walletNetworkId)).catch(() => {});
     this.notify();
     return true;
@@ -295,7 +312,7 @@ class MidnightService {
         api.getConnectionStatus(), api.getConfiguration(), api.getUnshieldedAddress(), api.getDustBalance(), api.getUnshieldedBalances(),
       ]);
       const reportedNetwork = configuration?.networkId || status?.networkId;
-      if (reportedNetwork && String(reportedNetwork).toLowerCase() !== this.currentNetwork.walletNetworkId) {
+      if (reportedNetwork && normalizeNetworkId(reportedNetwork) !== this.currentNetwork.walletNetworkId) {
         throw new Error(`1AM is connected to ${reportedNetwork}; switch it to ${this.currentNetwork.name} and try again.`);
       }
       const address = readFirstValue(unshieldedAddress, ['unshieldedAddress', 'address']);
@@ -303,6 +320,7 @@ class MidnightService {
 
       this.walletApi = api;
       this.walletConfiguration = configuration;
+      this.connectedNetworkId = normalizeNetworkId(reportedNetwork || this.currentNetwork.walletNetworkId);
       this.walletAddress = address;
       this.dustBalance = numberOrNull(readFirstValue(dust, ['balance', 'dust', 'dustBalance']));
       this.nightBalance = Object.values(unshieldedBalances || {}).map(numberOrNull).filter((value) => value !== null).reduce((total, value) => total + value, 0) || null;
@@ -328,17 +346,20 @@ class MidnightService {
     this.nightBalance = null;
     this.walletApi = null;
     this.walletConfiguration = null;
+    this.connectedNetworkId = null;
     this.notify();
   }
 
   assertDustBuffer() {
+    if (!REQUIRE_DUST_BUFFER) return;
     if (this.dustBalance === null) return;
     const required = ESTIMATED_TRANSACTION_DUST + MIN_DUST_BUFFER;
     if (this.dustBalance < required) throw new Error(`Insufficient DUST buffer. Keep at least ${required} DUST available (${ESTIMATED_TRANSACTION_DUST} estimated + ${MIN_DUST_BUFFER} safety buffer).`);
   }
 
   async ensureConnected() {
-    if (this.isConnected && this.walletApi && this.walletConfiguration) return;
+    if (this.isConnected && this.walletApi && this.walletConfiguration && this.connectedNetworkId === this.currentNetwork.walletNetworkId) return;
+    if (this.isConnected) this.disconnectWallet();
     const connection = await this.connectWallet();
     if (!connection.success) throw new Error(connection.error);
   }
@@ -347,7 +368,7 @@ class MidnightService {
     await this.ensureConnected();
     this.assertDustBuffer();
     const titleHash = await hashTitleToBytes32(title);
-    const providers = await createLiveProviders(this.walletApi, this.walletConfiguration);
+    const providers = await createLiveProviders(this.walletApi, this.walletConfiguration, this.currentNetwork);
     const [{ deployContract }, compiledContract] = await Promise.all([
       import('@midnight-ntwrk/midnight-js-contracts'),
       makeSurveyCompiledContract(),
@@ -373,8 +394,15 @@ class MidnightService {
 
   /** Loads public state from a 1AM-selected or explicitly configured indexer. */
   async getSurveyState(contractAddress, networkKey = this.currentNetwork.id) {
-    const configuration = this.isConnected ? this.walletConfiguration : getConfiguredIndexer(networkKey);
-    if (!configuration?.indexerUri || !configuration?.indexerWsUri) throw new Error('Connect 1AM to use its indexer, or configure both public VITE_MIDNIGHT_*_INDEXER_URI values.');
+    const requestedNetwork = NETWORKS[String(networkKey || '').toUpperCase()];
+    if (!requestedNetwork) throw new Error(`Unsupported Midnight network: ${networkKey}.`);
+    const publicIndexer = getConfiguredIndexer(requestedNetwork.id);
+    const walletMatchesNetwork = this.isConnected && this.connectedNetworkId === requestedNetwork.walletNetworkId;
+    const configuration = walletMatchesNetwork ? {
+      indexerUri: this.walletConfiguration?.indexerUri || publicIndexer?.indexerUri,
+      indexerWsUri: this.walletConfiguration?.indexerWsUri || publicIndexer?.indexerWsUri,
+    } : publicIndexer;
+    if (!configuration?.indexerUri || !configuration?.indexerWsUri) throw new Error(`No ${requestedNetwork.name} indexer is configured.`);
     const [{ indexerPublicDataProvider }, { ledger }] = await Promise.all([
       import('@midnight-ntwrk/midnight-js-indexer-public-data-provider'),
       import('../../managed/anonymous_survey/contract/index.js'),
@@ -390,7 +418,7 @@ class MidnightService {
     if (!credential || typeof credential.getEligibilityScore !== 'function') throw new Error('No issuer-backed eligibility credential is available. AURA will not fabricate one; configure a credential issuer before enabling voting.');
     await this.ensureConnected();
     this.assertDustBuffer();
-    const providers = await createLiveProviders(this.walletApi, this.walletConfiguration);
+    const providers = await createLiveProviders(this.walletApi, this.walletConfiguration, this.currentNetwork);
     const [{ findDeployedContract }, compiledContract] = await Promise.all([
       import('@midnight-ntwrk/midnight-js-contracts'),
       makeSurveyCompiledContract(credential.getEligibilityScore),

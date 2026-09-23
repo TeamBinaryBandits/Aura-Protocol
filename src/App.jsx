@@ -16,7 +16,7 @@ import AdminOperations from './pages/AdminOperations';
 
 export default function App() {
   return (
-    <Router>
+    <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
       <div className="min-h-screen text-slate-800 font-sans selection:bg-emerald-500 selection:text-white relative overflow-x-hidden">
         {/* Calming Ghibli 2D Canvas Background with Sakura Petals & Floating Lanterns */}
         <GhibliCanvas2D />
