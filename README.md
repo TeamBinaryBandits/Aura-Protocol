@@ -44,12 +44,12 @@ Follow AURA Protocol on X: [@AuraProtoc8k](https://x.com/AuraProtoc8k)
 | Network | Contract address | Evidence |
 | --- | --- | --- |
 | Preview | [`88ee1d779afa1a534565c83dcc0f066b49364051d521bdef5eeed9b2927779aa`](https://explorer.1am.xyz/contract/88ee1d779afa1a534565c83dcc0f066b49364051d521bdef5eeed9b2927779aa) | Deployed with 1AM. Deployment transaction hash: `1f5c50115a19793006e4ebb2c45b78192481635e18af72c17a1dd0e98173e7ed` |
-| Preprod | Not deployed yet | No placeholder address is published. Deploy from **New Survey** with 1AM, then copy the returned address and transaction hashes here. |
+| Preprod | [`47b670d04faa9a0764fd58a1328b0914c64f6185ffeaeb97cac2dcd02becdf46`](https://explorer.1am.xyz/contract/47b670d04faa9a0764fd58a1328b0914c64f6185ffeaeb97cac2dcd02becdf46) | Deployed with 1AM. Deployment transaction hash: `e9984d911cafb297e7d0a085cc3009ee3fc6f8f55c2244dc47d2e1f9ded01cf7` |
 
-There is intentionally no fake Preprod address. A canonical Midnight contract address is determined by the wallet-authorized deployment transaction and confirmed by the indexer; generating a lookalike value on a server or terminal would be misleading and unsafe. Once deployed, set the finalized contract in `VITE_AURA_SURVEY_CONTRACTS_JSON` so Vercel can display it to all users.
+The Preprod address and transaction hash above were returned by the wallet-authorized deployment flow; AURA does not fabricate either value locally. Set the finalized contract in `VITE_AURA_SURVEY_CONTRACTS_JSON` so Vercel can display it to all users.
 
 ```dotenv
-VITE_AURA_SURVEY_CONTRACTS_JSON=[{"contractAddress":"<finalized Midnight address>","network":"preprod","title":"<public title>","description":"<public context>","options":["A","B","C","D"],"deploymentTxId":"<finalized transaction id>","deploymentTxHash":"<finalized transaction hash>"}]
+VITE_AURA_SURVEY_CONTRACTS_JSON=[{"contractAddress":"47b670d04faa9a0764fd58a1328b0914c64f6185ffeaeb97cac2dcd02becdf46","network":"preprod","title":"<public title>","description":"<public context>","options":["A","B","C","D"],"deploymentTxId":"<finalized transaction id>","deploymentTxHash":"e9984d911cafb297e7d0a085cc3009ee3fc6f8f55c2244dc47d2e1f9ded01cf7"}]
 ```
 
 ## Privacy model / Privacy Claim
