@@ -13,8 +13,23 @@ Follow AURA Protocol on X: [@AuraProtoc8k](https://x.com/AuraProtoc8k)
 - Contract/application tests: `npm test` (10 passing tests across 5 suites)
 - CI workflow: [`.github/workflows/ci.yml`](.github/workflows/ci.yml), compiling Compact and running tests/build on every push and pull request
 - Product proposal: [`docs/product-proposal.md`](docs/product-proposal.md)
-- Live demo: add the Vercel URL after the first approved production deployment
-- Demo video and a genuine terminal screenshot of `npm test`: supplied by the maintainer after running this revision
+- Live demo: https://aura-protocol-eight.vercel.app/
+- Demo video: https://drive.google.com/file/d/1tP3um-PsVwlxObZV3BsJNHupmPdowzf_/view?usp=sharing
+- Test paased:
+- <img width="957" height="575" alt="image" src="https://github.com/user-attachments/assets/d79f5baa-9cf6-4e60-b771-66d053503dc0" />
+
+## Screenshot of Live App
+<img width="1600" height="800" alt="Screenshot 2026-09-02 020156" src="https://github.com/user-attachments/assets/7a3c6495-8829-4bf2-b7e5-347b88a1015c" />
+<img width="1600" height="800" alt="Screenshot 2026-09-02 020138" src="https://github.com/user-attachments/assets/b83bf26c-d7e3-4760-a834-42d84e276df7" />
+<img width="1600" height="800" alt="Screenshot 2026-09-02 020115" src="https://github.com/user-attachments/assets/74b9a8e4-4ab1-4870-8952-0c9547f87c2d" />
+<img width="1600" height="800" alt="Screenshot 2026-09-02 020227" src="https://github.com/user-attachments/assets/5e277776-e75e-4543-af7c-40b5db352b3a" />
+
+## Mobile Responsive UI
+
+<img width="360" height="800" alt="WhatsApp Image 2026-09-02 at 2 05 45 AM" src="https://github.com/user-attachments/assets/7a8482e7-eee3-4a57-bc96-3819da4d3d10" />
+<img width="360" height="800" alt="WhatsApp Image 2026-09-02 at 2 05 44 AM" src="https://github.com/user-attachments/assets/0a0d899f-595f-4bae-a12c-44e6f5a2306b" />
+<img width="360" height="800" alt="WhatsApp Image 2026-09-02 at 2 05 44 AM (1)" src="https://github.com/user-attachments/assets/1737f150-a1ef-43cc-9e91-53d6d3be0bac" />
+
 
 ## Screenshots of live app
 
